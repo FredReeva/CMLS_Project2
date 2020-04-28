@@ -1,42 +1,40 @@
-/*
-  ==============================================================================
-
-    This file was auto-generated!
-
-    It contains the basic framework code for a JUCE plugin editor.
-
-  ==============================================================================
-*/
 
 #pragma once
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
-//==============================================================================
-/**
-*/
-class DistortionAudioProcessorEditor  : public AudioProcessorEditor,
-private Slider::Listener
+
+
+// declare all the classes that will be used in PluginEditor.cpp
+
+class DistortionAudioProcessorEditor  : public AudioProcessorEditor, private Slider::Listener 
 {
+    // declare all the methods that will be used in PluginEditor.cpp
+    
 public:
-    DistortionAudioProcessorEditor (DistortionAudioProcessor&);
-    ~DistortionAudioProcessorEditor();
+
+    DistortionAudioProcessorEditor (DistortionAudioProcessor&); //constructor (copy?)
+    ~DistortionAudioProcessorEditor(); //deconstructor
 
     //==============================================================================
+    //other public methods...
+    
     void paint (Graphics&) override;
     void resized() override;
+    
 
 private:
+
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     
-    //
-    void sliderValueChanged(Slider* slider) override;
+    void sliderValueChanged(Slider* slider) override; // value changes of sliders
     
-    DistortionAudioProcessor& processor;
+    DistortionAudioProcessor& processor; // reference to DistortionAudioProcessor (?)
     
-    // add potentiometers / toggles
+    // declare variables (potentiometers,...)
+    
     Slider volumePot;
 
     Slider gainPot;
@@ -45,9 +43,7 @@ private:
 
     Slider smoothParam;
 
+    //==============================================================================
     
-    
-    
-
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DistortionAudioProcessorEditor)
 };

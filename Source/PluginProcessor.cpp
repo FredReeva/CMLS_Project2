@@ -1,17 +1,8 @@
-/*
-  ==============================================================================
-
-    This file was auto-generated!
-
-    It contains the basic framework code for a JUCE plugin processor.
-
-  ==============================================================================
-*/
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-//==============================================================================
+//constructor of plugin
 DistortionAudioProcessor::DistortionAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
@@ -26,11 +17,14 @@ DistortionAudioProcessor::DistortionAudioProcessor()
 {
 }
 
+//deconstructor
 DistortionAudioProcessor::~DistortionAudioProcessor()
 {
 }
 
 //==============================================================================
+// various things don't know what they do
+
 const String DistortionAudioProcessor::getName() const
 {
     return JucePlugin_Name;
@@ -93,21 +87,24 @@ void DistortionAudioProcessor::changeProgramName (int index, const String& newNa
 }
 
 //==============================================================================
+
+// prepare to play method
 void DistortionAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
     
     // initialize things before the process block method
- 
 }
 
+// release resources method
 void DistortionAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
 
+// don't know (?)
 #ifndef JucePlugin_PreferredChannelConfigurations
 bool DistortionAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
@@ -132,11 +129,9 @@ bool DistortionAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
 }
 #endif
 
+// processor method: write here the actual code for the plugin
 void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
-    //write here the actual code for the plugin
-    
-    
     ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -144,26 +139,27 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
     // guaranteed to be empty - they may contain garbage).
+    
     // This is here to avoid people getting screaming feedback
     // when they first compile a plugin, but obviously you don't need to keep
     // this code if your algorithm always overwrites all the output channels.
+    
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
         
-
     // This is the place where you'd normally do the guts of your plugin's
     // audio processing...
+    
+    //--------------------------------------------------------------------
 
     // implement the distortion
     
-    int numSamples = buffer.getNumSamples(); // how many samples we have in our input buffer
+    int numSamples = buffer.getNumSamples(); // how many samples we have in our input buffer? determined by daw
     
     
     float* channelOutDataL = buffer.getWritePointer(0); //pointer output left channel
     float* channelOutDataR = buffer.getWritePointer(1); //pointer output right channel
-    
     const float* channelInData = buffer.getReadPointer(0); //pointer input channel
-    
     
     
     for (int i = 0; i < numSamples; ++i) { //scanning from one to the number of samples we have in a buffer
@@ -172,34 +168,46 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
 
         // tone before distortion?
         
-        volume = volumeValue*0.01f;
+        //create a copy of variables (do we need it?)
+        volume = volumeValue*0.01f; // __Value are public variables
         gain = gainValue;
         smooth = smoothValue;
-
+        
+        // apply here tone before distortion
+        
+        // implement various distortions 
         switch (smooth) {
+            
         case(1): // arctan function
-            channelOutDataL[i] = volume * (2.f / float_Pi) * atan(gain * channelInData[i]);
+            channelOutDataL[i] = (2.f / float_Pi) * atan(gain * channelInData[i]);
             channelOutDataR[i] = channelOutDataL[i]; // left = right (mono)
             break;
 
         case(2): // hard clipper
             if ((abs(gain*channelInData[i])) <= 1.f) {
-                channelOutDataL[i] = volume * (gain*channelInData[i]);
+                channelOutDataL[i] = (gain*channelInData[i]);
             }
             else {
-                channelOutDataL[i] = copysign(volume, channelInData[i]);
+                channelOutDataL[i] = copysign(1.f, channelInData[i]);
             }
             channelOutDataR[i] = channelOutDataL[i]; // left = right (mono)
             break;
 
         }
 
-        // tone after distortion?
+        // apply here tone after distortion
+        
+        // apply master volume
+        channelOutDataL[i] = channelOutDataL[i]*volume;
+        channelOutDataR[i] = channelOutDataR[i]*volume;
+        
 }
-  
+    //--------------------------------------------------------------------
+    
 }
 
 //==============================================================================
+
 bool DistortionAudioProcessor::hasEditor() const
 {
     return true; // (change this to false if you choose to not supply an editor)

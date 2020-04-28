@@ -1,28 +1,22 @@
-/*
-  ==============================================================================
-
-    This file was auto-generated!
-
-    It contains the basic framework code for a JUCE plugin processor.
-
-  ==============================================================================
-*/
 
 #pragma once
 
 #include <JuceHeader.h>
 
-//==============================================================================
-/**
-*/
+// declare classes used in PluginProcessor.cpp
+
 class DistortionAudioProcessor  : public AudioProcessor
 {
+    // declare methods/variables used in DistortionAudioProcessor class
+    
 public:
+    
+    DistortionAudioProcessor(); //constructor
+    ~DistortionAudioProcessor(); //deconstructor
+    
     //==============================================================================
-    DistortionAudioProcessor();
-    ~DistortionAudioProcessor();
-
-    //==============================================================================
+    //various public methods...
+    
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
 
@@ -56,21 +50,23 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
     
 public:
-    // declare variables linked to the potentiometers
+
+    // declare variables linked to the potentiometers (public because they need to be seen in PluginEditor class)
     float gainValue;
     float toneValue;
     float volumeValue;
     int smoothValue;
 
 private:
-    //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DistortionAudioProcessor)
-    
-    // declare the buffer and other variables as private member of the processor class
-    
+
+    // declare variables used in processor.cpp as private members of the processor class
     float volume;
     float tone;
     float gain;
     int smooth;
+
+    //==============================================================================
+    
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DistortionAudioProcessor)
 
 };
