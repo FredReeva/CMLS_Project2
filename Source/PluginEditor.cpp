@@ -9,7 +9,7 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor(DistortionAudioPr
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (500, 230);
+    setSize(400, 200); //minimum (300,200)
     
     // add controls to the constructor, defining parameters and making it visible
 
@@ -48,32 +48,23 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor(DistortionAudioPr
     addAndMakeVisible(volumeLabel);
     volumeLabel.attachToComponent(&volumePot, false);
     volumeLabel.setText("Volume", dontSendNotification);
-    
 
-    // dist type
-    addAndMakeVisible(typeParam);
-    typeParam.setSliderStyle(Slider::LinearVertical);
-    typeParam.setRange(1, 2, 1);
-    typeParam.setValue(1);
-    typeParam.setTextBoxStyle(Slider::TextBoxBelow, false, 80, 20);
-
-    addAndMakeVisible(typeLabel);
-    typeLabel.attachToComponent(&typeParam, false);
-    typeLabel.setText("Type", dontSendNotification);
-
-
-
-
-
-    getLookAndFeel().setColour(Slider::thumbColourId,Colours::red);
-    
-    
     // add listener to the potentiometers (to change value)
     gainPot.addListener(this);
     tonePot.addListener(this);
     volumePot.addListener(this);
-    typeParam.addListener(this);
     
+    // dist type menu
+    addAndMakeVisible(typeMenu);
+    typeMenu.addItem("Soft Clipping", 1);
+    typeMenu.addItem("Hard Clipping", 2);
+    typeMenu.onChange = [this] { typeMenuChanged(); };
+    typeMenu.setSelectedId(1);
+
+
+    getLookAndFeel().setColour(Slider::thumbColourId,Colours::red);
+    
+
 }
 
 //deconstructor
@@ -103,18 +94,23 @@ void DistortionAudioProcessorEditor::resized()
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
 
-    const int margin = 50; //margin from parent window
     const int l = 100; //width and height
+    const int spacing = 20;
+    const int h_margin = (getWidth()-3*l)/2; //horizontal margin from parent window (for 3 pots width)
+    const int v_margin = (getHeight() - l) / 2; //vertical margin from parent window (for 1 pot+ menu height)
+    const int menu_width = 140; //depends on the content
+    
 
     // x position, y position, width, height (measured wrt top left)
+
+    typeMenu.setBounds(getWidth()/2-menu_width/2 ,v_margin+l+spacing/2, menu_width, 20);
     
-    gainPot.setBounds(margin, margin,l,l);
+    gainPot.setBounds(h_margin, v_margin-spacing/2,l,l);
     
-    tonePot.setBounds(margin +l, margin,l,l);
+    tonePot.setBounds(h_margin+l, v_margin-spacing/2,l,l);
     
-    volumePot.setBounds(margin +2*l, margin,l,l);
-    
-    typeParam.setBounds(margin +3*l, margin, l, l);
+    volumePot.setBounds(h_margin+2*l, v_margin-spacing/2,l,l);
+
   
 
 }
@@ -129,8 +125,16 @@ void DistortionAudioProcessorEditor::sliderValueChanged(Slider* slider)
 
     processor.volumeValue = volumePot.getValue();
 
-    processor.typeValue = typeParam.getValue();
 
 }
 
 
+void DistortionAudioProcessorEditor::typeMenuChanged()
+{
+    switch (typeMenu.getSelectedId())
+    {
+    case 1: processor.typeValue = 1;  break;
+    case 2: processor.typeValue = 2;   break;
+    default: processor.typeValue = 1; break;
+    }
+}

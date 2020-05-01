@@ -31,6 +31,7 @@ private:
     // access the processor object that created it.
     
     void sliderValueChanged(Slider* slider) override; // value changes of sliders
+    void typeMenuChanged();
     
     DistortionAudioProcessor& processor; // reference to DistortionAudioProcessor (?)
     
@@ -52,10 +53,7 @@ private:
     Slider typeParam;
     Label typeLabel;
 
-
-
-    
-    
+    ComboBox typeMenu;
 
     //==============================================================================
     
