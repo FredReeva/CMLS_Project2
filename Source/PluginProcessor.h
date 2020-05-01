@@ -55,15 +55,17 @@ public:
     float gainValue;
     float toneValue;
     float volumeValue;
-    int smoothValue;
+    int typeValue;
 
 private:
 
     // declare variables used in processor.cpp as private members of the processor class
+    float in;
+    float out;
     float volume;
     float tone;
     float gain;
-    int smooth;
+    int type;
 
     //==============================================================================
     

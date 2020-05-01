@@ -8,14 +8,15 @@
 
 // declare all the classes that will be used in PluginEditor.cpp
 
-class DistortionAudioProcessorEditor  : public AudioProcessorEditor, private Slider::Listener 
+class DistortionAudioProcessorEditor  : public AudioProcessorEditor, 
+                                        private Slider::Listener
 {
     // declare all the methods that will be used in PluginEditor.cpp
     
 public:
 
-    DistortionAudioProcessorEditor (DistortionAudioProcessor&); //constructor (copy?)
-    ~DistortionAudioProcessorEditor(); //deconstructor
+    DistortionAudioProcessorEditor (DistortionAudioProcessor& p); //constructor 
+    ~DistortionAudioProcessorEditor(); //distructor
 
     //==============================================================================
     //other public methods...
@@ -34,14 +35,27 @@ private:
     DistortionAudioProcessor& processor; // reference to DistortionAudioProcessor (?)
     
     // declare variables (potentiometers,...)
+
     
-    Slider volumePot;
-
     Slider gainPot;
-
+    Label gainLabel;
+    
+    
     Slider tonePot;
+    Label toneLabel;
+    
+        
+    Slider volumePot;
+    Label volumeLabel;
+    
 
-    Slider smoothParam;
+    Slider typeParam;
+    Label typeLabel;
+
+
+
+    
+    
 
     //==============================================================================
     

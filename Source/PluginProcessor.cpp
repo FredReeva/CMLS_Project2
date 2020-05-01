@@ -17,7 +17,7 @@ DistortionAudioProcessor::DistortionAudioProcessor()
 {
 }
 
-//deconstructor
+//distructor
 DistortionAudioProcessor::~DistortionAudioProcessor()
 {
 }
@@ -95,6 +95,8 @@ void DistortionAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     // initialisation that you need..
     
     // initialize things before the process block method
+
+    out = 0.f;
 }
 
 // release resources method
@@ -171,26 +173,26 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
         //create a copy of variables (do we need it?)
         volume = volumeValue*0.01f; // __Value are public variables
         gain = gainValue;
-        smooth = smoothValue;
+        type = typeValue;
+        
+        in = channelInData[i]*gain;
         
         // apply here tone before distortion
         
         // implement various distortions 
-        switch (smooth) {
+        switch (type) {
             
         case(1): // arctan function
-            channelOutDataL[i] = (2.f / float_Pi) * atan(gain * channelInData[i]);
-            channelOutDataR[i] = channelOutDataL[i]; // left = right (mono)
+            out = (2.f / float_Pi) * atan(in);
             break;
 
         case(2): // hard clipper
-            if ((abs(gain*channelInData[i])) <= 1.f) {
-                channelOutDataL[i] = (gain*channelInData[i]);
+            if ((abs(in)) <= 1.f) {
+                out = in;
             }
             else {
-                channelOutDataL[i] = copysign(1.f, channelInData[i]);
+                out = copysign(1.f, in);
             }
-            channelOutDataR[i] = channelOutDataL[i]; // left = right (mono)
             break;
 
         }
@@ -198,8 +200,8 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
         // apply here tone after distortion
         
         // apply master volume
-        channelOutDataL[i] = channelOutDataL[i]*volume;
-        channelOutDataR[i] = channelOutDataR[i]*volume;
+        channelOutDataL[i] = volume*out;
+        channelOutDataR[i] = volume*out;
         
 }
     //--------------------------------------------------------------------
