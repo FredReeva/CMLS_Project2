@@ -56,8 +56,13 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor(DistortionAudioPr
     
     // dist type menu
     addAndMakeVisible(typeMenu);
-    typeMenu.addItem("Soft Clipping", 1);
-    typeMenu.addItem("Hard Clipping", 2);
+    typeMenu.addSectionHeading("Symmetric");
+    typeMenu.addItem("Arctan Clipping", 1);
+    typeMenu.addItem("Exp Clipping", 2);
+    typeMenu.addItem("Hard Clipping", 3);
+    typeMenu.addSeparator();
+    typeMenu.addSectionHeading("Asymmetric");
+    typeMenu.addItem("Valve Simulation", 4);
     typeMenu.onChange = [this] { typeMenuChanged(); };
     typeMenu.setSelectedId(1);
 
@@ -131,10 +136,13 @@ void DistortionAudioProcessorEditor::sliderValueChanged(Slider* slider)
 
 void DistortionAudioProcessorEditor::typeMenuChanged()
 {
-    switch (typeMenu.getSelectedId())
+    processor.typeValue = typeMenu.getSelectedId();
+
+    /*switch (typeMenu.getSelectedId())
     {
     case 1: processor.typeValue = 1;  break;
-    case 2: processor.typeValue = 2;   break;
+    case 2: processor.typeValue = 2;  break;
+    case 3: processor.typeValue = 3;  break;
     default: processor.typeValue = 1; break;
-    }
+    }*/
 }

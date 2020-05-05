@@ -56,6 +56,8 @@ public:
     float toneValue;
     float volumeValue;
     int typeValue;
+    //valve parameters
+    
 
 private:
 
@@ -66,6 +68,10 @@ private:
     float tone;
     float gain;
     int type;
+    float q = -0.2;
+    float dist = 2;
+
+    
 
     //==============================================================================
     
