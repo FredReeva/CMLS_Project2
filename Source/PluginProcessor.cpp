@@ -1,6 +1,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "math.h"
 
 //constructor of plugin
 DistortionAudioProcessor::DistortionAudioProcessor()
@@ -172,8 +173,9 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
         
         //create a copy of variables (do we need it?)
         volume = volumeValue*0.01f; // __Value are public variables
-        gain = gainValue;
+        gain = gainValue*0.7f;
         type = typeValue;
+
         
         in = channelInData[i]*gain;
         
@@ -183,10 +185,24 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
         switch (type) {
             
         case(1): // arctan function
-            out = (2.f / float_Pi) * atan(in);
+            out = (4.f / float_Pi) * atan(in);
             break;
 
-        case(2): // hard clipper
+        case(2): // exponential
+            out = copysign((1.f-exp(-abs(in))), in);
+          
+          // quadratic bad something wrong?      
+          /*if ( abs(in) <= 0.33f) { out = 2.f * in; }
+            if ( abs(in) > 0.33f ) {
+                 if (in > 0) { out = pow((3 - (2 - in * 3)), 2) * 0.33f; }
+                 if (in < 0) { out = -pow((3 - (2 - abs(in) * 3)), 2) * 0.33f; }
+            }
+            if (abs(in) > 2*0.33f) {
+                out = copysign(1.f, in);
+            }
+            break;*/
+
+        case(3): // hard clipper
             if ((abs(in)) <= 1.f) {
                 out = in;
             }
@@ -195,6 +211,15 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
             }
             break;
 
+        case(4): // valve simulation (don't know about this...) try to change parameters
+            //if ( in > 1) { out = 1; }
+            if (in==q) {
+                out = (1 / dist) + (q / (1 - exp(q * dist))) ;
+            }
+            else {
+                out = ( (in - q) / (1 - exp(-dist * (in - q))) ) + (q / (1 - exp(dist * q))); 
+            }
+            break;
         }
 
         // apply here tone after distortion
