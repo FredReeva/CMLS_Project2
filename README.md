@@ -4,6 +4,6 @@
 4. Build it
 
 Save on github only: (add to .gitignore everything else)
--Source folder 
--Distortion.jucer 
--Distortion.vst/.exe... (facultative)
+1. Source folder 
+2. Distortion.jucer 
+3. Distortion.vst/.exe... (facultative)
