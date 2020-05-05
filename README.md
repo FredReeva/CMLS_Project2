@@ -3,7 +3,7 @@
 3. Save and open in IDE and code
 4. Build it
 
-Save on github only:
+Save on github only: (add to .gitignore everything else)
 Source folder 
 Distortion.jucer 
 Distortion.vst/.exe... (facultative)
