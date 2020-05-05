@@ -1,3 +1,4 @@
+0. Clone this repo (github desktop)
 1. Open Distortion.jucer with Projucer
 2. Modify export type in settings (select exe, vst...) (+ code?)
 3. Save and open in IDE and code
