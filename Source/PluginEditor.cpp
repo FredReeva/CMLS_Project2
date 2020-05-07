@@ -17,8 +17,8 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor(DistortionAudioPr
     // gain
     addAndMakeVisible(&gainPot);
     gainPot.setSliderStyle(Slider::RotaryVerticalDrag);
-    gainPot.setRange(0.0 , 100.0, 1.0);
-    gainPot.setValue(0.0);
+    gainPot.setRange(1.0 , 100.0, 1.0);
+    gainPot.setValue(1.0); 
     gainPot.setTextBoxStyle(Slider::TextBoxBelow, false, 80, 20);
 
     addAndMakeVisible(gainLabel);
@@ -29,8 +29,8 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor(DistortionAudioPr
     // tone
     addAndMakeVisible(&tonePot);
     tonePot.setSliderStyle(Slider::RotaryVerticalDrag);
-    tonePot.setRange(0.0 , 100.0, 1.0);
-    tonePot.setValue(65.0);
+    tonePot.setRange(80.0 , 18000.0, 1.0);
+    tonePot.setValue(9000.0);
     tonePot.setTextBoxStyle(Slider::TextBoxBelow, false, 80, 20);
 
     addAndMakeVisible(toneLabel);
@@ -57,12 +57,13 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor(DistortionAudioPr
     // dist type menu
     addAndMakeVisible(typeMenu);
     typeMenu.addSectionHeading("Symmetric");
-    typeMenu.addItem("Arctan Clipping", 1);
-    typeMenu.addItem("Exp Clipping", 2);
-    typeMenu.addItem("Hard Clipping", 3);
+    typeMenu.addItem("Soft Clipping #1", 1);
+    typeMenu.addItem("Soft Clipping #2", 2);
+    typeMenu.addItem("Hard Clipping #1", 3);
+    typeMenu.addItem("Hard Clipping #2", 4);
     typeMenu.addSeparator();
     typeMenu.addSectionHeading("Asymmetric");
-    typeMenu.addItem("Valve Simulation", 4);
+    typeMenu.addItem("Valve Simulation", 5);
     typeMenu.onChange = [this] { typeMenuChanged(); };
     typeMenu.setSelectedId(1);
 

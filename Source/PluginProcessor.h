@@ -56,20 +56,30 @@ public:
     float toneValue;
     float volumeValue;
     int typeValue;
-    //valve parameters
+
+    void updateFilter();
+    
     
 
 private:
 
     // declare variables used in processor.cpp as private members of the processor class
-    float in;
-    float out;
+    float lastSampleRate; //may be useless
+    float signal;
     float volume;
     float tone;
     float gain;
-    int type;
-    float q = -0.2;
-    float dist = 2;
+    int function;
+
+    //valve parameters
+    float q = -0.7;
+    float dist = 8;
+
+    // distortion
+    float distortionEffect(float input, int parameter);
+
+    // tone
+    dsp::ProcessorDuplicator<dsp::IIR::Filter <float>, dsp::IIR::Coefficients <float>> lowPassFilter;
 
     
 
