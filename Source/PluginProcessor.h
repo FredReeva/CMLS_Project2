@@ -57,6 +57,7 @@ public:
     float volumeValue;
     int typeValue;
 
+    // update tone parameter
     void updateFilter();
     
     
@@ -78,7 +79,7 @@ private:
     // distortion
     float distortionEffect(float input, int parameter);
 
-    // tone
+    // tone (duplicates for both channels)
     dsp::ProcessorDuplicator<dsp::IIR::Filter <float>, dsp::IIR::Coefficients <float>> lowPassFilter;
 
     

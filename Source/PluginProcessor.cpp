@@ -143,10 +143,10 @@ bool DistortionAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
 }
 #endif
 
-// method created for tone control
+// method created for updating tone control
 void DistortionAudioProcessor::updateFilter()
 {
-    tone = toneValue; //tone = 80+0.5*pow(toneValue,2.25);
+    tone = toneValue; //change here the behaviour of the pot (lin/log...)   tone = 80+0.5*pow(toneValue,2.25);
     *lowPassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, tone, 1.f);
 }
 
@@ -182,43 +182,32 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
     float* channelOutDataR = buffer.getWritePointer(1); //pointer output right channel
     const float* channelInData = buffer.getReadPointer(0); //pointer input channel
 
+    dsp::AudioBlock<float> block(buffer); //reads buffer to be used in dsp module
     
     
-    for (int i = 0; i < numSamples; ++i) { //scanning from one to the number of samples we have in a buffer
+    for (int i = 0; i < numSamples; ++i) { //samplewise scanning for distortion
         
-        // setSample(int destChannel, int destSample, Type newValue) 
-
-        // tone before distortion?
         
         //create a copy of variables (do we need it?)
         volume = volumeValue*0.01f; // __Value are public variables
         gain = gainValue*0.5f;
         function = typeValue;
-
-         // toneValue is between 0 and 100
-
         
+        // gain stage multiplication
         signal = channelInData[i]*gain;
 
-        // oversampling
-        
-        // apply here tone before distortion
-
+        // apply non linear distortion effect
         signal = distortionEffect(signal, function);
-
-        // apply here tone after distortion
-
-        // undersampling
         
-        // apply master volume
+        // apply master volume 
         channelOutDataL[i] = volume*signal;
         channelOutDataR[i] = volume*signal;
         
 }
     //--------------------------------------------------------------------
 
-    // tone
-    dsp::AudioBlock<float> block(buffer);
+
+    //tone: process and update value
     lowPassFilter.process(dsp::ProcessContextReplacing<float>(block));
     updateFilter();
     
@@ -291,8 +280,8 @@ float DistortionAudioProcessor::distortionEffect(float in, int type) // implemen
 
     case(5): // valve simulation (don't know about this...) try to change parameters
         in = 0.5 * in;
-        if ( in > 1) { out = 1.f; }
-        if (in == q) {
+        if ( in > 0) { out = (2.f / float_Pi) * atan(in); }
+        else if (in == q) {
             out = (1 / dist) + (q / (1.f - exp(q * dist)));
         }
         else {
