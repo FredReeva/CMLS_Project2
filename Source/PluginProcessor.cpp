@@ -13,9 +13,10 @@ DistortionAudioProcessor::DistortionAudioProcessor()
                       #endif
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
-                       ), lowPassFilter(dsp::IIR::Coefficients<float>::makeLowPass(44100, 20000.f, 0.1) )
+                       ), toneFilter(dsp::IIR::Coefficients<float>::makeLowPass(44100, 20000.f, 0.1) ), halfFilter(dsp::IIR::Coefficients<float>::makeLowPass(44100, 18000.f))
 #endif
 {
+    
 }
 
 //distructor
@@ -101,14 +102,30 @@ void DistortionAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     signal = 0.f;
     toneValue = 1;
 
+    K = 8; //oversampling factor
+
     // implement dsp iir filter
     dsp::ProcessSpec spec;
     spec.sampleRate = sampleRate;
     spec.maximumBlockSize = samplesPerBlock;
     spec.numChannels = getTotalNumOutputChannels();
 
-    lowPassFilter.prepare(spec);
-    lowPassFilter.reset();
+    toneFilter.prepare(spec);
+    toneFilter.reset();
+
+    //
+    dsp::ProcessSpec specOver;
+    specOver.sampleRate = sampleRate * K; //*K
+    specOver.maximumBlockSize = samplesPerBlock*K;
+    specOver.numChannels = getTotalNumOutputChannels();
+
+    halfFilter.prepare(specOver);
+    halfFilter.reset();
+
+    oversampledBuffer.setSize( 1 , samplesPerBlock * K);
+    oversampledBuffer.clear();
+
+
 }
 
 // release resources method
@@ -147,7 +164,7 @@ bool DistortionAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
 void DistortionAudioProcessor::updateFilter()
 {
     tone = toneValue; //change here the behaviour of the pot (lin/log...)   tone = 80+0.5*pow(toneValue,2.25);
-    *lowPassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, tone, 1.f);
+    *toneFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, tone, 1.f);
 }
 
 // processor method: write here the actual code for the plugin
@@ -177,39 +194,74 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
 
     int numSamples = buffer.getNumSamples(); // how many samples we have in our input buffer? determined by daw
     
-    
+
     float* channelOutDataL = buffer.getWritePointer(0); //pointer output left channel
     float* channelOutDataR = buffer.getWritePointer(1); //pointer output right channel
     const float* channelInData = buffer.getReadPointer(0); //pointer input channel
 
-    dsp::AudioBlock<float> block(buffer); //reads buffer to be used in dsp module
-    
-    
-    for (int i = 0; i < numSamples; ++i) { //samplewise scanning for distortion
-        
-        
-        //create a copy of variables (do we need it?)
-        volume = volumeValue*0.01f; // __Value are public variables
-        gain = gainValue*0.5f;
-        function = typeValue;
-        
-        // gain stage multiplication
-        signal = channelInData[i]*gain;
 
-        // apply non linear distortion effect
-        signal = distortionEffect(signal, function);
+
+    // oversampling
+    //const int K = 4; // N+1 number of 0s inserted in oversampling
+    //oversampledBuffer.setSize(1, buffer.getNumSamples * K);
+
+    int numOversamples = oversampledBuffer.getNumSamples();
+
+
+    for (int i = 0; i < numOversamples ; ++i) {  //samplewise scanning for distortion
+
+        //create a copy of variables (do we need it?)
+        volume = volumeValue * 0.01f; // __Value are public variables
+        gain = gainValue * 0.5f;
+        function = typeValue;
+        int j = i / K ; //index of audio sample: one in K
         
-        // apply master volume 
-        channelOutDataL[i] = volume*signal;
-        channelOutDataR[i] = volume*signal;
-        
-}
+        if (i % K == 0) // every K samples...
+        {
+            //... perform non-linear process
+            // gain stage multiplication
+            signal = channelInData[j] * gain;
+
+            // apply non linear distortion effect
+            signal = distortionEffect(signal, function);
+
+        } else { //... otherwise zero stuff
+            signal = 0.f;
+        }
+        // save the result in the oversampled buffer
+        oversampledBuffer.setSample(0,i,signal);
+    }
+        // apply filter to oversampled buffer
+
+
+
+    //dsp::AudioBlock<float> overBlock(oversampledBuffer); //reads buffer to be used in dsp module
+    //halfFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(getSampleRate(), 18000.f, 1.f);
+    //halfFilter.process(dsp::ProcessContextReplacing<float>(overBlock));
+
+    dsp::AudioBlock<float> block(oversampledBuffer); //reads buffer to be used in dsp module
+    //tone: process and update value
+    toneFilter.process(dsp::ProcessContextReplacing<float>(block));
+    updateFilter();
+
+    for (int i = 0; i < numOversamples; ++i) {  //samplewise scanning for distortion
+
+        int j = i / K; //index of audio sample: one in K
+        //downsampling
+        if (i % K == 0) {
+            // apply master volume 
+            channelOutDataL[j] = (K-0.5f) * volume * oversampledBuffer.getSample(0, i);
+            channelOutDataR[j] = channelOutDataL[j];
+        }
+
+    }
+
+    oversampledBuffer.clear();
+
     //--------------------------------------------------------------------
 
-
-    //tone: process and update value
-    lowPassFilter.process(dsp::ProcessContextReplacing<float>(block));
-    updateFilter();
+    
+    
     
 }
 

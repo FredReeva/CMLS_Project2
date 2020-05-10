@@ -65,12 +65,13 @@ public:
 private:
 
     // declare variables used in processor.cpp as private members of the processor class
-    float lastSampleRate; //may be useless
+    float lastSampleRate; 
     float signal;
     float volume;
     float tone;
     float gain;
     int function;
+    int K;
 
     //valve parameters
     float q = -0.7;
@@ -80,8 +81,10 @@ private:
     float distortionEffect(float input, int parameter);
 
     // tone (duplicates for both channels)
-    dsp::ProcessorDuplicator<dsp::IIR::Filter <float>, dsp::IIR::Coefficients <float>> lowPassFilter;
+    dsp::ProcessorDuplicator<dsp::IIR::Filter <float>, dsp::IIR::Coefficients <float>> toneFilter;
 
+    AudioSampleBuffer oversampledBuffer;
+    dsp::ProcessorDuplicator<dsp::IIR::Filter <float>, dsp::IIR::Coefficients <float>> halfFilter;
     
 
     //==============================================================================

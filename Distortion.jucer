@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="J31JJu" name="Distortion" projectType="audioplug" jucerVersion="5.4.7"
-              pluginVST3Category="Distortion" pluginFormats="buildVST3">
-  <MAINGROUP id="yB4ejX" name="Distortion">
+<JUCERPROJECT id="J31JJu" name="Distortion8Oversampled" projectType="audioplug"
+              jucerVersion="5.4.7" pluginVST3Category="Distortion" pluginFormats="buildVST3">
+  <MAINGROUP id="yB4ejX" name="Distortion8Oversampled">
     <GROUP id="{1A46AC84-2A09-A5B2-89E4-EFCD6AA060A7}" name="Source">
       <FILE id="KJjejx" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
