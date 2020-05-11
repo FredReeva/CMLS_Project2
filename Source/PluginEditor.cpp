@@ -29,8 +29,8 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor(DistortionAudioPr
     // tone
     addAndMakeVisible(&tonePot);
     tonePot.setSliderStyle(Slider::RotaryVerticalDrag);
-    tonePot.setRange(80.0 , 18000.0, 1.0);
-    tonePot.setValue(9000.0);
+    tonePot.setRange(1.0 , 100.0, 1.0);
+    tonePot.setValue(50.0);
     tonePot.setTextBoxStyle(Slider::TextBoxBelow, false, 80, 20);
 
     addAndMakeVisible(toneLabel);
@@ -48,6 +48,7 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor(DistortionAudioPr
     addAndMakeVisible(volumeLabel);
     volumeLabel.attachToComponent(&volumePot, false);
     volumeLabel.setText("Volume", dontSendNotification);
+    
 
     // add listener to the potentiometers (to change value)
     gainPot.addListener(this);
@@ -67,7 +68,11 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor(DistortionAudioPr
     typeMenu.onChange = [this] { typeMenuChanged(); };
     typeMenu.setSelectedId(1);
 
-
+    // checkbox oversampling
+    addAndMakeVisible(checkOversampling);
+    checkOversampling.onClick = [this] { updateToggleState(&checkOversampling); };
+    checkOversampling.setButtonText("Oversampling (x4)");
+    
     getLookAndFeel().setColour(Slider::thumbColourId,Colours::red);
     
 
@@ -108,9 +113,10 @@ void DistortionAudioProcessorEditor::resized()
     
 
     // x position, y position, width, height (measured wrt top left)
+    checkOversampling.setBounds((2.08)*getWidth() / 3 - menu_width / 2, v_margin + l + spacing / 2, menu_width, 20);
 
-    typeMenu.setBounds(getWidth()/2-menu_width/2 ,v_margin+l+spacing/2, menu_width, 20);
-    
+    typeMenu.setBounds(getWidth()/3-menu_width/2 ,v_margin+l+spacing/2, menu_width, 20);
+
     gainPot.setBounds(h_margin, v_margin-spacing/2,l,l);
     
     tonePot.setBounds(h_margin+l, v_margin-spacing/2,l,l);
@@ -146,4 +152,12 @@ void DistortionAudioProcessorEditor::typeMenuChanged()
     case 3: processor.typeValue = 3;  break;
     default: processor.typeValue = 1; break;
     }*/
+}
+
+void DistortionAudioProcessorEditor::updateToggleState(Button* button)
+{
+    auto state = button->getToggleState();
+    
+    processor.selectedOversampling = state ? 1 : 0;
+ 
 }

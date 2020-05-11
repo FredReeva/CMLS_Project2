@@ -6,6 +6,7 @@
 //constructor of plugin
 DistortionAudioProcessor::DistortionAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
+<<<<<<< Updated upstream
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
                       #if ! JucePlugin_IsSynth
@@ -16,6 +17,19 @@ DistortionAudioProcessor::DistortionAudioProcessor()
                        ), lowPassFilter(dsp::IIR::Coefficients<float>::makeLowPass(44100, 20000.f, 0.1) )
 #endif
 {
+=======
+    : AudioProcessor(BusesProperties()
+#if ! JucePlugin_IsMidiEffect
+#if ! JucePlugin_IsSynth
+        .withInput("Input", AudioChannelSet::stereo(), true)
+#endif
+        .withOutput("Output", AudioChannelSet::stereo(), true)
+#endif
+    ) , toneFilter(dsp::IIR::Coefficients<float>::makeHighShelf(44100, 20000.f, 0.1, 0.5))
+#endif
+{
+    oversam = new dsp::Oversampling<float>(2, oversamplingFactor, dsp::Oversampling<float>::FilterType::filterHalfBandFIREquiripple, true); //oversampling
+>>>>>>> Stashed changes
 }
 
 //distructor
@@ -101,14 +115,23 @@ void DistortionAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     signal = 0.f;
     toneValue = 1;
 
-    // implement dsp iir filter
+    // initialize dsp iir filter
     dsp::ProcessSpec spec;
     spec.sampleRate = sampleRate;
     spec.maximumBlockSize = samplesPerBlock;
     spec.numChannels = getTotalNumOutputChannels();
 
+<<<<<<< Updated upstream
     lowPassFilter.prepare(spec);
     lowPassFilter.reset();
+=======
+    toneFilter.prepare(spec);
+    toneFilter.reset();
+
+    // initialize oversampling
+    oversam->initProcessing(static_cast<size_t> (samplesPerBlock));
+
+>>>>>>> Stashed changes
 }
 
 // release resources method
@@ -146,8 +169,8 @@ bool DistortionAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
 // method created for updating tone control
 void DistortionAudioProcessor::updateFilter()
 {
-    tone = toneValue; //change here the behaviour of the pot (lin/log...)   tone = 80+0.5*pow(toneValue,2.25);
-    *lowPassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, tone, 1.f);
+    tone = toneValue*100; //change here the behaviour of the pot (lin/log...)   tone = 80+0.5*pow(toneValue,2.25);
+    *toneFilter.state = *dsp::IIR::Coefficients<float>::makeHighShelf(lastSampleRate, tone, 1.f, 0.1f); // (samplerate, frequency, Q, multiplier)
 }
 
 // processor method: write here the actual code for the plugin
@@ -173,6 +196,7 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
     
     //--------------------------------------------------------------------
 
+<<<<<<< Updated upstream
     
 
     int numSamples = buffer.getNumSamples(); // how many samples we have in our input buffer? determined by daw
@@ -205,12 +229,60 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
         
 }
     //--------------------------------------------------------------------
+=======
+    dsp::AudioBlock<float> inputBlock(buffer);
 
+    if (selectedOversampling == 0)
+    {
+        for (int channel = 0; channel < inputBlock.getNumChannels(); ++channel) //scan the channels
+        {
+            auto* channelSignal = inputBlock.getChannelPointer(channel); // get a ponter to 
+
+            for (int sample = 0; sample < inputBlock.getNumSamples(); ++sample)
+            {
+                volume = volumeValue * 0.01f;
+                gain = gainValue * 0.5f;
+                function = typeValue;
+
+                channelSignal[sample] = volume * distortionEffect(channelSignal[sample] * gain, function);
+            }
+
+        }
+    }
+    else if (selectedOversampling == 1)
+    {
+        dsp::AudioBlock<float> oversampledBlock;
+
+        oversampledBlock = oversam->processSamplesUp(inputBlock); // Upsample...
+
+        for (int channel = 0; channel < oversampledBlock.getNumChannels(); ++channel) //scan the channels
+        {
+            auto* channelSignal = oversampledBlock.getChannelPointer(channel); // get a ponter to 
+
+            for (int sample = 0; sample < oversampledBlock.getNumSamples(); ++sample)
+            {
+                volume = volumeValue * 0.01f;
+                gain = gainValue * 0.5f;
+                function = typeValue;
+>>>>>>> Stashed changes
+
+                channelSignal[sample] = volume * distortionEffect(channelSignal[sample] * gain, function);
+            }
+        }
+
+        oversam->processSamplesDown(inputBlock); // Downsample... (filter included)
+    }
 
     //tone: process and update value
+<<<<<<< Updated upstream
     lowPassFilter.process(dsp::ProcessContextReplacing<float>(block));
     updateFilter();
     
+=======
+    toneFilter.process(dsp::ProcessContextReplacing<float>(inputBlock)); 
+    updateFilter();
+     
+>>>>>>> Stashed changes
 }
 
 //==============================================================================
@@ -274,18 +346,19 @@ float DistortionAudioProcessor::distortionEffect(float in, int type) // implemen
             out = in;
         }
         else {
-            out = copysign(1.f, in);
+            out = (in>0) ? 1.f : -1.f;
         }
         break;
 
     case(5): // valve simulation (don't know about this...) try to change parameters
-        in = 0.5 * in;
-        if ( in > 0) { out = (2.f / float_Pi) * atan(in); }
-        else if (in == q) {
-            out = (1 / dist) + (q / (1.f - exp(q * dist)));
-        }
+        if ( in > 0 ) { out = (2.f / float_Pi) * atan(in); }
         else {
-            out = ((in - q) / (1.f - exp(-dist * (in - q)))) + (q / (1.f - exp(dist * q)));
+            if (in == q) {
+                out = (1.f / dist) + (q / (1.f - exp(q * dist)));
+            }
+            else {
+                out = ((in - q) / (1.f - exp(-dist * (in - q)))) + (q / (1.f - exp(dist * q)));
+            }
         }
         break;
     }

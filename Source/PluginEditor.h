@@ -32,6 +32,7 @@ private:
     
     void sliderValueChanged(Slider* slider) override; // value changes of sliders
     void typeMenuChanged();
+    void updateToggleState(Button* button);
     
     DistortionAudioProcessor& processor; // reference to DistortionAudioProcessor (?)
     
@@ -54,6 +55,8 @@ private:
     Label typeLabel;
 
     ComboBox typeMenu;
+
+    ToggleButton checkOversampling;
 
     //==============================================================================
     
