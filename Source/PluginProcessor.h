@@ -83,17 +83,13 @@ private:
     float distortionEffect(float input, int parameter);
 
     // tone (duplicates for both channels)
-<<<<<<< Updated upstream
-    dsp::ProcessorDuplicator<dsp::IIR::Filter <float>, dsp::IIR::Coefficients <float>> lowPassFilter;
 
-    
-=======
     dsp::ProcessorDuplicator<dsp::IIR::Filter <float>, dsp::IIR::Coefficients <float>> toneFilter;
 
     // oversampling
     int oversamplingFactor = 2;
     ScopedPointer<dsp::Oversampling<float>> oversam;
->>>>>>> Stashed changes
+
 
     //==============================================================================
     
