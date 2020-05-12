@@ -57,7 +57,7 @@ public:
     float volumeValue;
     int typeValue;
 
-    int selectedOversampling = 0;
+    bool selectedOversampling;
     
 
     // update tone parameter

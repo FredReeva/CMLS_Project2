@@ -65,7 +65,7 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor(DistortionAudioPr
     typeMenu.addSeparator();
     typeMenu.addSectionHeading("Asymmetric");
     typeMenu.addItem("Valve Simulation", 5);
-    typeMenu.onChange = [this] { typeMenuChanged(); };
+    typeMenu.onChange = [this] { typeMenuChanged(&typeMenu); };
     typeMenu.setSelectedId(1);
 
     // checkbox oversampling
@@ -141,23 +141,16 @@ void DistortionAudioProcessorEditor::sliderValueChanged(Slider* slider)
 }
 
 
-void DistortionAudioProcessorEditor::typeMenuChanged()
+void DistortionAudioProcessorEditor::typeMenuChanged(ComboBox* menu)
 {
-    processor.typeValue = typeMenu.getSelectedId();
-
-    /*switch (typeMenu.getSelectedId())
-    {
-    case 1: processor.typeValue = 1;  break;
-    case 2: processor.typeValue = 2;  break;
-    case 3: processor.typeValue = 3;  break;
-    default: processor.typeValue = 1; break;
-    }*/
+    //processor.typeValue = typeMenu.getSelectedId();
+    processor.typeValue = menu->getSelectedId();
 }
 
 void DistortionAudioProcessorEditor::updateToggleState(Button* button)
 {
-    auto state = button->getToggleState();
-    
-    processor.selectedOversampling = state ? 1 : 0;
- 
+    /*auto state = button->getToggleState();
+    processor.selectedOversampling = state ? true: false;*/
+
+    processor.selectedOversampling = button->getToggleState();
 }

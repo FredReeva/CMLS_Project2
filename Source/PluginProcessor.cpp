@@ -13,9 +13,12 @@ DistortionAudioProcessor::DistortionAudioProcessor()
 #endif
         .withOutput("Output", AudioChannelSet::stereo(), true)
 #endif
-    ) , toneFilter(dsp::IIR::Coefficients<float>::makeHighShelf(44100, 20000.f, 0.1, 0.5))
+    ), // initialization list (tone, parameterState)
+    toneFilter(dsp::IIR::Coefficients<float>::makeHighShelf(44100, 20000.f, 0.1, 0.5))
+
 #endif
 {
+    // oversampling cnstructor
     oversam = new dsp::Oversampling<float>(2, oversamplingFactor, dsp::Oversampling<float>::FilterType::filterHalfBandFIREquiripple, true); //oversampling
 }
 
@@ -101,18 +104,18 @@ void DistortionAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     lastSampleRate = sampleRate;
     signal = 0.f;
     toneValue = 1;
+    selectedOversampling = false;
 
-    // initialize dsp iir filter
+    // initialize oversampling
+    oversam->initProcessing(static_cast<size_t> (samplesPerBlock));
+
+    // initialize dsp iir filter (tone)
     dsp::ProcessSpec spec;
     spec.sampleRate = sampleRate;
     spec.maximumBlockSize = samplesPerBlock;
     spec.numChannels = getTotalNumOutputChannels();
-
     toneFilter.prepare(spec);
     toneFilter.reset();
-
-    // initialize oversampling
-    oversam->initProcessing(static_cast<size_t> (samplesPerBlock));
 
 }
 
@@ -180,7 +183,7 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
 
     dsp::AudioBlock<float> inputBlock(buffer);
 
-    if (selectedOversampling == 0)
+    if (selectedOversampling == false)
     {
         for (int channel = 0; channel < inputBlock.getNumChannels(); ++channel) //scan the channels
         {
@@ -197,7 +200,7 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
 
         }
     }
-    else if (selectedOversampling == 1)
+    else if (selectedOversampling == true)
     {
         dsp::AudioBlock<float> oversampledBlock;
 
