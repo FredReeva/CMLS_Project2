@@ -1,5 +1,4 @@
 
-
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
@@ -13,47 +12,32 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor(DistortionAudioPr
     
     // add controls to the constructor, defining parameters and making it visible
 
-    
     // gain
     addAndMakeVisible(&gainPot);
-    gainPot.setSliderStyle(Slider::RotaryVerticalDrag);
-    gainPot.setRange(1.0 , 100.0, 1.0);
-    gainPot.setValue(1.0); 
+    gainPot.setSliderStyle(Slider::RotaryVerticalDrag); 
     gainPot.setTextBoxStyle(Slider::TextBoxBelow, false, 80, 20);
 
     addAndMakeVisible(gainLabel);
     gainLabel.attachToComponent(&gainPot, false);
     gainLabel.setText("Gain",dontSendNotification);
 
-
     // tone
     addAndMakeVisible(&tonePot);
     tonePot.setSliderStyle(Slider::RotaryVerticalDrag);
-    tonePot.setRange(1.0 , 100.0, 1.0);
-    tonePot.setValue(50.0);
     tonePot.setTextBoxStyle(Slider::TextBoxBelow, false, 80, 20);
 
     addAndMakeVisible(toneLabel);
     toneLabel.attachToComponent(&tonePot, false);
     toneLabel.setText("Tone", dontSendNotification);
     
-    
     // volume
     addAndMakeVisible(&volumePot); 
     volumePot.setSliderStyle(Slider::RotaryVerticalDrag);
-    volumePot.setRange(0.0 , 100.0, 1.0);
-    volumePot.setValue(0.1);
     volumePot.setTextBoxStyle(Slider::TextBoxBelow, false, 80, 20);
     
     addAndMakeVisible(volumeLabel);
     volumeLabel.attachToComponent(&volumePot, false);
     volumeLabel.setText("Volume", dontSendNotification);
-    
-
-    // add listener to the potentiometers (to change value)
-    gainPot.addListener(this);
-    tonePot.addListener(this);
-    volumePot.addListener(this);
     
     // dist type menu
     addAndMakeVisible(typeMenu);
@@ -65,20 +49,26 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor(DistortionAudioPr
     typeMenu.addSeparator();
     typeMenu.addSectionHeading("Asymmetric");
     typeMenu.addItem("Valve Simulation", 5);
-    typeMenu.onChange = [this] { typeMenuChanged(&typeMenu); };
-    typeMenu.setSelectedId(1);
+    typeMenu.addItem("Rectifier", 6);
+    typeMenu.addItem("Octave Rectifier", 7);
 
     // checkbox oversampling
     addAndMakeVisible(checkOversampling);
-    checkOversampling.onClick = [this] { updateToggleState(&checkOversampling); };
     checkOversampling.setButtonText("Oversampling (x4)");
+
+    // attachments Editor-Processor (used instead of listeners)
+    gainAttach = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(processor.parameterState, "gain", gainPot);
+    volumeAttach = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(processor.parameterState, "volume", volumePot);
+    toneAttach = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(processor.parameterState, "tone", tonePot);
+    oversamplingAttach = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(processor.parameterState, "oversampling", checkOversampling);
+    typeMenuAttach = std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment>(processor.parameterState, "type", typeMenu);
     
     getLookAndFeel().setColour(Slider::thumbColourId,Colours::red);
     
 
 }
 
-//deconstructor
+//distructor
 DistortionAudioProcessorEditor::~DistortionAudioProcessorEditor()
 {
 }
@@ -92,11 +82,7 @@ void DistortionAudioProcessorEditor::paint (Graphics& g)
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
 
     g.setColour (Colours::white);
-    g.setFont (14.0f);
-
-    //g.drawText ("Distortion", 75, 10, 50, 20, Justification::centred, true);
-    //g.drawText("Tone", 175, 80, 50, 20, Justification::centred, true);
-    //g.drawText("Volume", 275, 80, 50, 20, Justification::centred, true);
+    g.setFont(14.0f);
 }
 
 //resized method
@@ -123,34 +109,4 @@ void DistortionAudioProcessorEditor::resized()
     
     volumePot.setBounds(h_margin+2*l, v_margin-spacing/2,l,l);
 
-  
-
-}
-
-// method that will be called when the pot value is changed (and will actually change the variable)
-// this method links the editor with the processor!
-void DistortionAudioProcessorEditor::sliderValueChanged(Slider* slider)
-{
-    processor.gainValue = gainPot.getValue();
-    
-    processor.toneValue = tonePot.getValue();
-
-    processor.volumeValue = volumePot.getValue();
-
-
-}
-
-
-void DistortionAudioProcessorEditor::typeMenuChanged(ComboBox* menu)
-{
-    //processor.typeValue = typeMenu.getSelectedId();
-    processor.typeValue = menu->getSelectedId();
-}
-
-void DistortionAudioProcessorEditor::updateToggleState(Button* button)
-{
-    /*auto state = button->getToggleState();
-    processor.selectedOversampling = state ? true: false;*/
-
-    processor.selectedOversampling = button->getToggleState();
 }

@@ -8,8 +8,7 @@
 
 // declare all the classes that will be used in PluginEditor.cpp
 
-class DistortionAudioProcessorEditor  : public AudioProcessorEditor, 
-                                        private Slider::Listener
+class DistortionAudioProcessorEditor  : public AudioProcessorEditor 
 {
     // declare all the methods that will be used in PluginEditor.cpp
     
@@ -30,33 +29,35 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     
-    void sliderValueChanged(Slider* slider) override; // value changes of sliders
-    void typeMenuChanged(ComboBox* menu);
-    void updateToggleState(Button* button);
-    
     DistortionAudioProcessor& processor; // reference to DistortionAudioProcessor (?)
     
-    // declare variables (potentiometers,...)
-
+    // declare variables (potentiometers,menus,checkbox) + labels
     
     Slider gainPot;
     Label gainLabel;
     
-    
     Slider tonePot;
     Label toneLabel;
-    
-        
+      
     Slider volumePot;
     Label volumeLabel;
-    
-
+   
     Slider typeParam;
     Label typeLabel;
 
     ComboBox typeMenu;
 
     ToggleButton checkOversampling;
+
+
+public:
+    // attachments editor-processor. They MUST be put AFTER the declaration of the thing they attach, 
+    // otherwise crash when closing (due to bottom-up distruction)
+    std::unique_ptr <AudioProcessorValueTreeState::SliderAttachment> gainAttach; 
+    std::unique_ptr <AudioProcessorValueTreeState::SliderAttachment> volumeAttach;
+    std::unique_ptr <AudioProcessorValueTreeState::SliderAttachment> toneAttach;
+    std::unique_ptr <AudioProcessorValueTreeState::ButtonAttachment> oversamplingAttach;
+    std::unique_ptr <AudioProcessorValueTreeState::ComboBoxAttachment> typeMenuAttach;
 
     //==============================================================================
     
