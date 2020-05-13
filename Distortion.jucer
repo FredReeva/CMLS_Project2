@@ -3,7 +3,7 @@
 <JUCERPROJECT id="J31JJu" name="Distortion" projectType="audioplug" jucerVersion="5.4.7"
               pluginVST3Category="Distortion" pluginManufacturer="Group-17"
               pluginName="Distortion 17" pluginManufacturerCode="#17" cppLanguageStandard="latest"
-              pluginFormats="buildVST3">
+              pluginFormats="buildStandalone">
   <MAINGROUP id="yB4ejX" name="Distortion">
     <GROUP id="{1A46AC84-2A09-A5B2-89E4-EFCD6AA060A7}" name="Source">
       <FILE id="KJjejx" name="PluginProcessor.cpp" compile="1" resource="0"
@@ -18,8 +18,8 @@
   <EXPORTFORMATS>
     <VS2019 targetFolder="Builds/VisualStudio2019">
       <CONFIGURATIONS>
-        <CONFIGURATION name="Debug"/>
-        <CONFIGURATION name="Release" useRuntimeLibDLL="0" isDebug="1"/>
+        <CONFIGURATION name="Debug" isDebug="1" targetName="Distortion #17"/>
+        <CONFIGURATION name="Release" isDebug="1" targetName="Distortion#17" optimisation="3"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../../../../../JUCE/modules"/>
