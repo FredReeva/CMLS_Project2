@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="J31JJu" name="Distortion" projectType="audioplug" jucerVersion="5.4.7"
+<JUCERPROJECT id="J31JJu" name="Distortion-17" projectType="audioplug" jucerVersion="5.4.7"
               pluginVST3Category="Distortion" pluginManufacturer="Group-17"
-              pluginName="Distortion 17" pluginManufacturerCode="#17" cppLanguageStandard="latest"
-              pluginFormats="buildStandalone">
-  <MAINGROUP id="yB4ejX" name="Distortion">
+              pluginName="Distortion 17" pluginManufacturerCode="#17" pluginFormats="buildVST3"
+              pluginDesc="Waveshaper distortion with tone control and oversampling"
+              companyName="Group-17">
+  <MAINGROUP id="yB4ejX" name="Distortion-17">
     <GROUP id="{1A46AC84-2A09-A5B2-89E4-EFCD6AA060A7}" name="Source">
       <FILE id="KJjejx" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
@@ -18,8 +19,9 @@
   <EXPORTFORMATS>
     <VS2019 targetFolder="Builds/VisualStudio2019">
       <CONFIGURATIONS>
-        <CONFIGURATION name="Debug" isDebug="1" targetName="Distortion #17"/>
-        <CONFIGURATION name="Release" isDebug="1" targetName="Distortion#17" optimisation="3"/>
+        <CONFIGURATION name="Debug" isDebug="1" targetName="Distortion-17"/>
+        <CONFIGURATION name="Release" isDebug="1" targetName="Distortion-17" optimisation="3"
+                       useRuntimeLibDLL="0"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../../../../../JUCE/modules"/>

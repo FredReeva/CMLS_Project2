@@ -294,7 +294,7 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 // process signal (apply distortion)
 float DistortionAudioProcessor::distortionEffect(float in, int function) // implement various distortions 
 {
-    float out;
+    float out = 0;
     // implement various distortions: 
     switch (function) {
 
@@ -325,7 +325,7 @@ float DistortionAudioProcessor::distortionEffect(float in, int function) // impl
         break;
 
     case(5): // valve simulation
-        if (in >= 0) { out = (2.f / float_Pi) * atan(in); }
+        if (in >= 0) { out = (1.f - exp(-abs(in))); }
         else {
             if (in == q) {
                 out = (1.f / dist) + (q / (1.f - exp(q * dist)));
@@ -337,19 +337,19 @@ float DistortionAudioProcessor::distortionEffect(float in, int function) // impl
         break;
 
     case(6): // rectifier
-        if (in >= 0) { out = (2.f / float_Pi) * atan(in); }
+        if (in >= 0) { out = (1.f - exp(-abs(in))); }
         else {
             out = 0.f;
         }
         break;
 
     case(7): // octave rectifier
-        if (in >= 0) { out = (2.f / float_Pi) * atan(in); }
-        else {
-            out = - (2.f / float_Pi) * atan(in);
-        }
+        out = (1.f - exp(-abs(in)));
         break;
+
+    default: out = 0;
     }
+    
     return out;
 }
 
