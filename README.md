@@ -1,3 +1,12 @@
+# Distortion-17
+Distortion effect plugin, based on waveshaping.
+Parameters controlled by the user in the GUI: Gain, Tone, Volume, Type, Oversampling x4 (ON/OFF).
+Types: 
+* Symmetric: Soft Clip #1, Soft Clip #2, Hard Clip #1, Hard Clip#2
+* Asymmetric: Valve Simulation, Rectifier, Octave Rectifier
+
+
+## How to work on it:
 0. Clone this repo (github desktop)
 1. Open Distortion.jucer with Projucer
 2. Modify export type in settings (select exe, vst...) (+ code?)
