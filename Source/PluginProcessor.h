@@ -52,26 +52,38 @@ public:
 public:
 
     // declare variables linked to the potentiometers (public because they need to be seen in PluginEditor class)
-    float gainValue;
-    float toneValue;
-    float volumeValue;
-    int typeValue;
-    //valve parameters
-    
 
+    AudioProcessorValueTreeState parameterState; // stores value of parameters and allows communication GUI-Processor
+    AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+   
+    // update tone parameter
+    void updateFilter();
+    
 private:
 
     // declare variables used in processor.cpp as private members of the processor class
-    float in;
-    float out;
-    float volume;
-    float tone;
-    float gain;
-    int type;
-    float q = -0.2;
-    float dist = 2;
+    float lastSampleRate; //store sample rate used in tone
 
-    
+    // pointers to parameters
+    std::atomic<float>* gain = nullptr;
+    std::atomic<float>* tone = nullptr;
+    std::atomic<float>* volume = nullptr;
+    std::atomic<float>* checkOS = nullptr;
+    std::atomic<float>* type = nullptr;
+
+    //valve parameters
+    float q = -0.7;
+    float dist = 8;
+
+    // computes the waveshaping for the distortion
+    float distortionEffect(float input, int function);
+
+    // tone (duplicated for both filter and its coefficients)
+    dsp::ProcessorDuplicator<dsp::IIR::Filter <float>, dsp::IIR::Coefficients <float>> toneFilter;
+
+    // oversampling
+    int oversamplingFactor = 2;
+    ScopedPointer<dsp::Oversampling<float>> oversam;
 
     //==============================================================================
     

@@ -1,10 +1,6 @@
-# CMLS_Project2
-Audio Plugin: Distortion
+## Future Improvements
 
-TODO list:
-
-1. add tone (before/after the distortion part)
-2. add distortion types
-3. add knobs to modify parameters of the functions
-4. do oversampling
-5. improve the gui (selectors/buttons...)
+* Adjust tone pot behaviour
+* Add new functions
+* Add controllable parameters for functions
+* ...

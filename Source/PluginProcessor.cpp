@@ -3,19 +3,25 @@
 #include "PluginEditor.h"
 #include "math.h"
 
-//constructor of plugin
 DistortionAudioProcessor::DistortionAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", AudioChannelSet::stereo(), true)
-                     #endif
-                       )
+    : AudioProcessor(BusesProperties()
+#if ! JucePlugin_IsMidiEffect
+#if ! JucePlugin_IsSynth
+        .withInput("Input", AudioChannelSet::stereo(), true)
+#endif
+        .withOutput("Output", AudioChannelSet::stereo(), true)
+#endif
+    ), // initialization list (toneFilter, parameterState)
+    toneFilter(dsp::IIR::Coefficients<float>::makeLowPass(44100, 20000.f, 0.1)),
+    parameterState(*this, nullptr, "PARAMETER", { createParameterLayout() })
+
 #endif
 {
+    // oversampling constructor
+    oversam = new dsp::Oversampling<float>(2, oversamplingFactor, dsp::Oversampling<float>::FilterType::filterHalfBandFIREquiripple, true);
+    // value tree where parameters are stored
+    parameterState.state = ValueTree("savedParams");
 }
 
 //distructor
@@ -23,8 +29,31 @@ DistortionAudioProcessor::~DistortionAudioProcessor()
 {
 }
 
+// this method contains all the parameters linked to the editor and their values
+AudioProcessorValueTreeState::ParameterLayout DistortionAudioProcessor::createParameterLayout()
+{
+    //generate a vector 
+    std::vector <std::unique_ptr<RangedAudioParameter>> params;
+
+    //parameters and their values (id, Name, startValue, endValue, defaultValue)
+    auto gainParam = std::make_unique<AudioParameterFloat>("gain", "Gain", 0.f, 100.f, 1.f);
+    auto volumeParam = std::make_unique<AudioParameterFloat>("volume", "Volume", 0.f, 1.f, 0.01f);
+    auto toneParam = std::make_unique<AudioParameterFloat>("tone", "Tone", 250.f, 3000.f, 1500.f);
+    auto typeParam = std::make_unique<AudioParameterInt>("type","Type",1,7,1);
+    auto oversamplingCheckParam = std::make_unique<AudioParameterBool>("oversampling", "Oversampling", false);
+
+    //"writes" the vector
+    params.push_back(std::move(gainParam));
+    params.push_back(std::move(toneParam));
+    params.push_back(std::move(volumeParam));
+    params.push_back(std::move(typeParam));
+    params.push_back(std::move(oversamplingCheckParam));
+
+    // return the vector to be put in the initialization list memeber "parameterState"
+    return { params.begin(), params.end() };
+}
+
 //==============================================================================
-// various things don't know what they do
 
 const String DistortionAudioProcessor::getName() const
 {
@@ -97,17 +126,27 @@ void DistortionAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     
     // initialize things before the process block method
 
-    out = 0.f;
+    lastSampleRate = sampleRate;
+
+    // initialize oversampling
+    oversam->initProcessing(static_cast<size_t> (samplesPerBlock));
+
+    // initialize dsp iir filter (tone)
+    dsp::ProcessSpec spec;
+    spec.sampleRate = sampleRate;
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.numChannels = getTotalNumOutputChannels();
+    toneFilter.prepare(spec);
+    toneFilter.reset();
+
 }
 
-// release resources method
 void DistortionAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
 
-// don't know (?)
 #ifndef JucePlugin_PreferredChannelConfigurations
 bool DistortionAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
@@ -154,83 +193,54 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
     // audio processing...
     
     //--------------------------------------------------------------------
+    volume = parameterState.getRawParameterValue("volume"); 
+    gain = parameterState.getRawParameterValue("gain");
+    checkOS = parameterState.getRawParameterValue("oversampling");
+    type = parameterState.getRawParameterValue("type");
 
-    // implement the distortion
-    
-    int numSamples = buffer.getNumSamples(); // how many samples we have in our input buffer? determined by daw
-    
-    
-    float* channelOutDataL = buffer.getWritePointer(0); //pointer output left channel
-    float* channelOutDataR = buffer.getWritePointer(1); //pointer output right channel
-    const float* channelInData = buffer.getReadPointer(0); //pointer input channel
-    
-    
-    for (int i = 0; i < numSamples; ++i) { //scanning from one to the number of samples we have in a buffer
-        
-        // setSample(int destChannel, int destSample, Type newValue) 
+    //function = typeValue;
 
-        // tone before distortion?
-        
-        //create a copy of variables (do we need it?)
-        volume = volumeValue*0.01f; // __Value are public variables
-        gain = gainValue*0.7f;
-        type = typeValue;
+    dsp::AudioBlock<float> inputBlock(buffer);
 
-        
-        in = channelInData[i]*gain;
-        
-        // apply here tone before distortion
-        
-        // implement various distortions 
-        switch (type) {
-            
-        case(1): // arctan function
-            out = (4.f / float_Pi) * atan(in);
-            break;
+    //tone: process and update value (not working properly)
 
-        case(2): // exponential
-            out = copysign((1.f-exp(-abs(in))), in);
-          
-          // quadratic bad something wrong?      
-          /*if ( abs(in) <= 0.33f) { out = 2.f * in; }
-            if ( abs(in) > 0.33f ) {
-                 if (in > 0) { out = pow((3 - (2 - in * 3)), 2) * 0.33f; }
-                 if (in < 0) { out = -pow((3 - (2 - abs(in) * 3)), 2) * 0.33f; }
-            }
-            if (abs(in) > 2*0.33f) {
-                out = copysign(1.f, in);
-            }
-            break;*/
+    toneFilter.process(dsp::ProcessContextReplacing<float>(inputBlock));
+    updateFilter();
 
-        case(3): // hard clipper
-            if ((abs(in)) <= 1.f) {
-                out = in;
-            }
-            else {
-                out = copysign(1.f, in);
-            }
-            break;
+    if (*checkOS == 0.f)
+    {
+        for (int channel = 0; channel < inputBlock.getNumChannels(); ++channel) //scan the channels
+        {
+            auto* channelSignal = inputBlock.getChannelPointer(channel); // get a ponter to 
 
-        case(4): // valve simulation (don't know about this...) try to change parameters
-            //if ( in > 1) { out = 1; }
-            if (in==q) {
-                out = (1 / dist) + (q / (1 - exp(q * dist))) ;
+            for (int sample = 0; sample < inputBlock.getNumSamples(); ++sample)
+            {
+                channelSignal[sample] = (*volume) * distortionEffect(channelSignal[sample] * (*gain), *type);
             }
-            else {
-                out = ( (in - q) / (1 - exp(-dist * (in - q))) ) + (q / (1 - exp(dist * q))); 
+
+        }
+    }
+    else if (*checkOS == 1.f)
+    {
+        dsp::AudioBlock<float> oversampledBlock;
+
+        oversampledBlock = oversam->processSamplesUp(inputBlock); // Upsample...
+
+        for (int channel = 0; channel < oversampledBlock.getNumChannels(); ++channel) //scan the channels
+        {
+            auto* channelSignal = oversampledBlock.getChannelPointer(channel); // get a ponter to 
+
+            for (int sample = 0; sample < oversampledBlock.getNumSamples(); ++sample)
+            {
+                channelSignal[sample] = (*volume) * distortionEffect(channelSignal[sample] * (*gain), *type);
             }
-            break;
         }
 
-        // apply here tone after distortion
-        
-        // apply master volume
-        channelOutDataL[i] = volume*out;
-        channelOutDataR[i] = volume*out;
-        
-}
-    //--------------------------------------------------------------------
+        oversam->processSamplesDown(inputBlock); // Downsample... (filter included)
+    }
+
     
+     
 }
 
 //==============================================================================
@@ -251,12 +261,27 @@ void DistortionAudioProcessor::getStateInformation (MemoryBlock& destData)
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+
+    // get parameters when opening a saved project in daw
+    std::unique_ptr <XmlElement> xml (parameterState.state.createXml());
+    copyXmlToBinary(*xml, destData);
 }
 
 void DistortionAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+
+    // store parameters when closing daw and saving project
+    std::unique_ptr <XmlElement> savedParameters(getXmlFromBinary(data, sizeInBytes));
+
+    if (savedParameters != nullptr)
+    {
+        if (savedParameters->hasTagName(parameterState.state.getType()))
+        {
+            parameterState.state = ValueTree::fromXml(*savedParameters);
+        }
+    }
 }
 
 //==============================================================================
@@ -264,4 +289,74 @@ void DistortionAudioProcessor::setStateInformation (const void* data, int sizeIn
 AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new DistortionAudioProcessor();
+}
+
+// process signal (apply distortion)
+float DistortionAudioProcessor::distortionEffect(float in, int function) // implement various distortions 
+{
+    float out = 0;
+    // implement various distortions: 
+    switch (function) {
+
+    case(1): // soft 1 (arctan)
+        out = (2.f / float_Pi) * atan(in);
+        break;
+
+    case(2): // soft 2 (fract)
+        out = in / (1.f + abs(in));
+        break;
+
+    case(3): // hard 1 (exponential)
+        if (in >= 0.f) {
+            out = (1.f - exp(-abs(in)));
+        }
+        else {
+            out = -(1.f - exp(-abs(in)));
+        }
+        break;
+
+    case(4): // hard 2 (clip)
+        if ((abs(in)) <= 1.f) {
+            out = in;
+        }
+        else {
+            out = (in > 0) ? 1.f : -1.f;
+        }
+        break;
+
+    case(5): // valve simulation
+        if (in >= 0) { out = (1.f - exp(-abs(in))); }
+        else {
+            if (in == q) {
+                out = (1.f / dist) + (q / (1.f - exp(q * dist)));
+            }
+            else {
+                out = ((in - q) / (1.f - exp(-dist * (in - q)))) + (q / (1.f - exp(dist * q)));
+            }
+        }
+        break;
+
+    case(6): // rectifier
+        if (in >= 0) { out = (1.f - exp(-abs(in))); }
+        else {
+            out = 0.f;
+        }
+        break;
+
+    case(7): // octave rectifier
+        out = (1.f - exp(-abs(in)));
+        break;
+
+    default: out = 0;
+    }
+    
+    return out;
+}
+
+// method created for updating tone control
+void DistortionAudioProcessor::updateFilter()
+{
+    auto tone = parameterState.getRawParameterValue("tone"); //change here the behaviour of the pot (lin/log...)   tone = 80+0.5*pow(toneValue,2.25);
+
+    *toneFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, (*tone)); // (samplerate, frequency, Q, multiplier)
 }
