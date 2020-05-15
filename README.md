@@ -7,10 +7,10 @@ Types:
 * Asymmetric: Valve Simulation, Rectifier, Octave Rectifier
 
 
-## How to work on it:
-0. Clone this repo (github desktop)
+### How to work on it:
+0. Clone this repo
 1. Open Distortion.jucer with Projucer
-2. Modify export type in settings (select exe, vst...) (+ code?)
+2. Modify export type in settings (select exe, vst...), select debug/release, select static linking when release
 3. Save and open in IDE and code
 4. Build it
 
