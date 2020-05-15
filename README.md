@@ -10,6 +10,7 @@ Types:
 ### How to work on it:
 0. Clone this repo
 1. Open Distortion.jucer with Projucer
+2. Add juce_dsp in modules!
 2. Modify export type in settings (select exe, vst...), select debug/release, select static linking when release
 3. Save and open in IDE and code
 4. Build it
