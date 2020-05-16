@@ -5,9 +5,6 @@
 #include "PluginProcessor.h"
 
 
-
-// declare all the classes that will be used in PluginEditor.cpp
-
 class DistortionAudioProcessorEditor  : public AudioProcessorEditor 
 {
     // declare all the methods that will be used in PluginEditor.cpp
@@ -17,9 +14,6 @@ public:
     DistortionAudioProcessorEditor (DistortionAudioProcessor& p); //constructor 
     ~DistortionAudioProcessorEditor(); //distructor
 
-    //==============================================================================
-    //other public methods...
-    
     void paint (Graphics&) override;
     void resized() override;
     
@@ -29,7 +23,7 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     
-    DistortionAudioProcessor& processor; // reference to DistortionAudioProcessor (?)
+    DistortionAudioProcessor& processor; // reference to DistortionAudioProcessor
     
     // declare variables (potentiometers,menus,checkbox) + labels
     

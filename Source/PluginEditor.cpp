@@ -63,6 +63,7 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor(DistortionAudioPr
     oversamplingAttach = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(processor.parameterState, "oversampling", checkOversampling);
     typeMenuAttach = std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment>(processor.parameterState, "type", typeMenu);
     
+    // style/colours of the plugin
     getLookAndFeel().setColour(Slider::thumbColourId,Colours::red);
     
 
@@ -80,7 +81,6 @@ void DistortionAudioProcessorEditor::paint (Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
-
     g.setColour (Colours::white);
     g.setFont(14.0f);
 }
@@ -88,21 +88,23 @@ void DistortionAudioProcessorEditor::paint (Graphics& g)
 //resized method
 void DistortionAudioProcessorEditor::resized()
 {
-    // This is generally where you'll want to lay out the positions of any
-    // subcomponents in your editor..
 
-    const int l = 100; //width and height
+    const int l = 100; // width and height of pots
     const int spacing = 20;
-    const int h_margin = (getWidth()-3*l)/2; //horizontal margin from parent window (for 3 pots width)
-    const int v_margin = (getHeight() - l) / 2; //vertical margin from parent window (for 1 pot+ menu height)
-    const int menu_width = 140; //depends on the content
+    const int h_margin = (getWidth()-3*l)/2; // horizontal margin from parent window (for 3 pots width)
+    const int v_margin = (getHeight() - l) / 2; // vertical margin from parent window (for 1 pot + menu height)
+    const int menu_width = 140; // width of the menu
     
 
-    // x position, y position, width, height (measured wrt top left)
+    // x position, y position, width, height (measured from top left)
+    
+    // oversampling checkbox
     checkOversampling.setBounds((2.08)*getWidth() / 3 - menu_width / 2, v_margin + l + spacing / 2, menu_width, 20);
 
+    // menu of functions
     typeMenu.setBounds(getWidth()/3-menu_width/2 ,v_margin+l+spacing/2, menu_width, 20);
 
+    // potentiometers
     gainPot.setBounds(h_margin, v_margin-spacing/2,l,l);
     
     tonePot.setBounds(h_margin+l, v_margin-spacing/2,l,l);

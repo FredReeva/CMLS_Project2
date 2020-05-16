@@ -12,7 +12,7 @@ class DistortionAudioProcessor  : public AudioProcessor
 public:
     
     DistortionAudioProcessor(); //constructor
-    ~DistortionAudioProcessor(); //deconstructor
+    ~DistortionAudioProcessor(); //distructor
     
     //==============================================================================
     //various public methods...
@@ -53,15 +53,15 @@ public:
 
     // declare variables linked to the potentiometers (public because they need to be seen in PluginEditor class)
 
-    AudioProcessorValueTreeState parameterState; // stores value of parameters and allows communication GUI-Processor
+    // stores value of parameters and allows communication GUI-Processor
+    AudioProcessorValueTreeState parameterState; 
     AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
    
-    // update tone parameter
-    void updateFilter();
     
 private:
 
     // declare variables used in processor.cpp as private members of the processor class
+    
     float lastSampleRate; //store sample rate used in tone
 
     // pointers to parameters
@@ -80,6 +80,9 @@ private:
 
     // tone (duplicated for both filter and its coefficients)
     dsp::ProcessorDuplicator<dsp::IIR::Filter <float>, dsp::IIR::Coefficients <float>> toneFilter;
+    
+    // update tone parameter
+    void updateFilter();
 
     // oversampling
     int oversamplingFactor = 2;

@@ -20,11 +20,12 @@ DistortionAudioProcessor::DistortionAudioProcessor()
 {
     // oversampling constructor
     oversam = new dsp::Oversampling<float>(2, oversamplingFactor, dsp::Oversampling<float>::FilterType::filterHalfBandFIREquiripple, true);
-    // value tree where parameters are stored
+    
+    // value tree (where parameters are stored)
     parameterState.state = ValueTree("savedParams");
 }
 
-//distructor
+// distructor
 DistortionAudioProcessor::~DistortionAudioProcessor()
 {
 }
@@ -32,17 +33,17 @@ DistortionAudioProcessor::~DistortionAudioProcessor()
 // this method contains all the parameters linked to the editor and their values
 AudioProcessorValueTreeState::ParameterLayout DistortionAudioProcessor::createParameterLayout()
 {
-    //generate a vector 
+    // generate a vector 
     std::vector <std::unique_ptr<RangedAudioParameter>> params;
 
-    //parameters and their values (id, Name, startValue, endValue, defaultValue)
+    // parameters and their values (id, Name, startValue, endValue, defaultValue)
     auto gainParam = std::make_unique<AudioParameterFloat>("gain", "Gain", 0.f, 100.f, 1.f);
     auto volumeParam = std::make_unique<AudioParameterFloat>("volume", "Volume", 0.f, 1.f, 0.01f);
     auto toneParam = std::make_unique<AudioParameterFloat>("tone", "Tone", 250.f, 3000.f, 1500.f);
     auto typeParam = std::make_unique<AudioParameterInt>("type","Type",1,7,1);
     auto oversamplingCheckParam = std::make_unique<AudioParameterBool>("oversampling", "Oversampling", false);
 
-    //"writes" the vector
+    // "writes" the vector
     params.push_back(std::move(gainParam));
     params.push_back(std::move(toneParam));
     params.push_back(std::move(volumeParam));
@@ -121,14 +122,13 @@ void DistortionAudioProcessor::changeProgramName (int index, const String& newNa
 // prepare to play method
 void DistortionAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
     
     // initialize things before the process block method
-
+    
+    // store the sample rate
     lastSampleRate = sampleRate;
 
-    // initialize oversampling
+    // initialize processing of oversampling
     oversam->initProcessing(static_cast<size_t> (samplesPerBlock));
 
     // initialize dsp iir filter (tone)
@@ -188,39 +188,37 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
     
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
-        
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
     
-    //--------------------------------------------------------------------
+    //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    
+    // get parameters from gui
     volume = parameterState.getRawParameterValue("volume"); 
     gain = parameterState.getRawParameterValue("gain");
     checkOS = parameterState.getRawParameterValue("oversampling");
     type = parameterState.getRawParameterValue("type");
-
-    //function = typeValue;
-
+    
+    // read the audio block from the buffer
     dsp::AudioBlock<float> inputBlock(buffer);
 
-    //tone: process and update value (not working properly)
-
+    // tone: process and update value
     toneFilter.process(dsp::ProcessContextReplacing<float>(inputBlock));
     updateFilter();
-
-    if (*checkOS == 0.f)
+    
+    // process the signal without or with oversampling
+    if (*checkOS == 0.f) // oversampling OFF
     {
         for (int channel = 0; channel < inputBlock.getNumChannels(); ++channel) //scan the channels
         {
-            auto* channelSignal = inputBlock.getChannelPointer(channel); // get a ponter to 
+            auto* channelSignal = inputBlock.getChannelPointer(channel); // get a ponter to the channel
 
-            for (int sample = 0; sample < inputBlock.getNumSamples(); ++sample)
+            for (int sample = 0; sample < inputBlock.getNumSamples(); ++sample) // scan all the samples
             {
-                channelSignal[sample] = (*volume) * distortionEffect(channelSignal[sample] * (*gain), *type);
+                channelSignal[sample] = (*volume) * distortionEffect(channelSignal[sample] * (*gain), *type); // apply distortion
             }
 
         }
     }
-    else if (*checkOS == 1.f)
+    else if (*checkOS == 1.f) // oversampling ON
     {
         dsp::AudioBlock<float> oversampledBlock;
 
@@ -228,15 +226,15 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
 
         for (int channel = 0; channel < oversampledBlock.getNumChannels(); ++channel) //scan the channels
         {
-            auto* channelSignal = oversampledBlock.getChannelPointer(channel); // get a ponter to 
+            auto* channelSignal = oversampledBlock.getChannelPointer(channel); // get a ponter to the channel
 
-            for (int sample = 0; sample < oversampledBlock.getNumSamples(); ++sample)
+            for (int sample = 0; sample < oversampledBlock.getNumSamples(); ++sample) // scan all the samples
             {
-                channelSignal[sample] = (*volume) * distortionEffect(channelSignal[sample] * (*gain), *type);
+                channelSignal[sample] = (*volume) * distortionEffect(channelSignal[sample] * (*gain), *type); // apply distortion
             }
         }
 
-        oversam->processSamplesDown(inputBlock); // Downsample... (filter included)
+        oversam->processSamplesDown(inputBlock); // ...Downsample (halfband filter included)
     }
 
     
@@ -261,6 +259,7 @@ void DistortionAudioProcessor::getStateInformation (MemoryBlock& destData)
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+    // IMPLEMENTED
 
     // get parameters when opening a saved project in daw
     std::unique_ptr <XmlElement> xml (parameterState.state.createXml());
@@ -271,6 +270,7 @@ void DistortionAudioProcessor::setStateInformation (const void* data, int sizeIn
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+    // IMPLEMENTED
 
     // store parameters when closing daw and saving project
     std::unique_ptr <XmlElement> savedParameters(getXmlFromBinary(data, sizeInBytes));
@@ -285,7 +285,7 @@ void DistortionAudioProcessor::setStateInformation (const void* data, int sizeIn
 }
 
 //==============================================================================
-// This creates new instances of the plugin..
+// This creates new instances of the plugin
 AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new DistortionAudioProcessor();
@@ -295,6 +295,7 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 float DistortionAudioProcessor::distortionEffect(float in, int function) // implement various distortions 
 {
     float out = 0;
+    
     // implement various distortions: 
     switch (function) {
 
@@ -302,7 +303,7 @@ float DistortionAudioProcessor::distortionEffect(float in, int function) // impl
         out = (2.f / float_Pi) * atan(in);
         break;
 
-    case(2): // soft 2 (fract)
+    case(2): // soft 2 (frac)
         out = in / (1.f + abs(in));
         break;
 
@@ -315,7 +316,7 @@ float DistortionAudioProcessor::distortionEffect(float in, int function) // impl
         }
         break;
 
-    case(4): // hard 2 (clip)
+    case(4): // hard 2 (hard clip)
         if ((abs(in)) <= 1.f) {
             out = in;
         }
@@ -356,7 +357,7 @@ float DistortionAudioProcessor::distortionEffect(float in, int function) // impl
 // method created for updating tone control
 void DistortionAudioProcessor::updateFilter()
 {
-    auto tone = parameterState.getRawParameterValue("tone"); //change here the behaviour of the pot (lin/log...)   tone = 80+0.5*pow(toneValue,2.25);
+    auto tone = parameterState.getRawParameterValue("tone"); // get tone value from gui
 
-    *toneFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, (*tone)); // (samplerate, frequency, Q, multiplier)
+    *toneFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, (*tone)); // modify the filter
 }
