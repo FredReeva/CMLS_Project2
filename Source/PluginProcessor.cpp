@@ -39,7 +39,7 @@ AudioProcessorValueTreeState::ParameterLayout DistortionAudioProcessor::createPa
     // parameters and their values (id, Name, startValue, endValue, defaultValue)
     auto gainParam = std::make_unique<AudioParameterFloat>("gain", "Gain", 0.f, 100.f, 1.f);
     auto volumeParam = std::make_unique<AudioParameterFloat>("volume", "Volume", 0.f, 1.f, 0.01f);
-    auto toneParam = std::make_unique<AudioParameterFloat>("tone", "Tone", 250.f, 3000.f, 1500.f);
+    auto toneParam = std::make_unique<AudioParameterFloat>("tone", "Tone", 250.f, 10000.f, 5000.f);
     auto typeParam = std::make_unique<AudioParameterInt>("type","Type",1,7,1);
     auto oversamplingCheckParam = std::make_unique<AudioParameterBool>("oversampling", "Oversampling", false);
 
@@ -200,9 +200,6 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
     // read the audio block from the buffer
     dsp::AudioBlock<float> inputBlock(buffer);
 
-    // tone: process and update value
-    toneFilter.process(dsp::ProcessContextReplacing<float>(inputBlock));
-    updateFilter();
     
     // process the signal without or with oversampling
     if (*checkOS == 0.f) // oversampling OFF
@@ -237,7 +234,9 @@ void DistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuf
         oversam->processSamplesDown(inputBlock); // ...Downsample (halfband filter included)
     }
 
-    
+    // tone: process and update value
+    toneFilter.process(dsp::ProcessContextReplacing<float>(inputBlock));
+    updateFilter();
      
 }
 
@@ -326,26 +325,26 @@ float DistortionAudioProcessor::distortionEffect(float in, int function) // impl
         break;
 
     case(5): // valve simulation
-        if (in >= 0) { out = (1.f - exp(-abs(in))); }
+        if (in >= 0) { out = (1.f - exp(-abs(in/2))); }
         else {
-            if (in == q) {
+            if ((in/2) == q) {
                 out = (1.f / dist) + (q / (1.f - exp(q * dist)));
             }
             else {
-                out = ((in - q) / (1.f - exp(-dist * (in - q)))) + (q / (1.f - exp(dist * q)));
+                out = (((in/2) - q) / (1.f - exp(-dist * ((in / 2) - q)))) + (q / (1.f - exp(dist * q)));
             }
         }
         break;
 
     case(6): // rectifier
-        if (in >= 0) { out = (1.f - exp(-abs(in))); }
+        if (in >= 0) { out = (1.f - exp(-abs(in/2))); }
         else {
             out = 0.f;
         }
         break;
 
     case(7): // octave rectifier
-        out = (1.f - exp(-abs(in)));
+        out = (1.f - exp(-abs(in/2)));
         break;
 
     default: out = 0;
